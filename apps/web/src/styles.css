@@ -1,0 +1,403 @@
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
+:root {
+  color-scheme: dark;
+  font-family: "IBM Plex Sans", sans-serif;
+  --bedrock: #121513;
+  --canopy: #1c221d;
+  --stone: #232923;
+  --slate: #2c342d;
+  --iron: #b9c0b3;
+  --fog: #dfe5d5;
+  --moss: #87a85f;
+  --lantern: #e5c774;
+  --ember: #d97a52;
+  --pine: #4f6941;
+  --border-soft: rgba(223, 229, 213, 0.09);
+  --border-strong: rgba(223, 229, 213, 0.16);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  --grid: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top left, rgba(135, 168, 95, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(229, 199, 116, 0.12), transparent 18%),
+    var(--bedrock);
+  color: var(--fog);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+code {
+  font-family: "IBM Plex Mono", monospace;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.side-rail {
+  position: relative;
+  padding: 28px 20px;
+  background:
+    var(--grid),
+    linear-gradient(180deg, rgba(79, 105, 65, 0.28), transparent 34%),
+    var(--canopy);
+  background-size: 24px 24px, auto, auto;
+  border-right: 1px solid var(--border-soft);
+}
+
+.brand-block {
+  padding: 22px;
+  border: 1px solid var(--border-soft);
+  background: linear-gradient(180deg, rgba(223, 229, 213, 0.04), rgba(223, 229, 213, 0.01));
+  box-shadow: var(--shadow);
+}
+
+.brand-kicker,
+.eyebrow,
+.state-label,
+.metric-label,
+.panel-header p,
+.leaderboard-rank {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: rgba(223, 229, 213, 0.64);
+}
+
+.brand-block h1,
+.hero-panel h1,
+.page-header h1,
+.panel h2 {
+  margin: 0;
+  font-family: "Chakra Petch", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.brand-copy,
+.hero-copy,
+.muted,
+.metric-hint,
+.state-body {
+  color: rgba(223, 229, 213, 0.7);
+}
+
+.nav-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.nav-link {
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  background: rgba(223, 229, 213, 0.02);
+  color: rgba(223, 229, 213, 0.88);
+  font-family: "Chakra Petch", sans-serif;
+}
+
+.nav-link.active {
+  border-color: rgba(229, 199, 116, 0.24);
+  background: rgba(229, 199, 116, 0.08);
+  color: var(--lantern);
+}
+
+.main-pane {
+  padding: 28px;
+}
+
+.page {
+  display: grid;
+  gap: 20px;
+}
+
+.hero-panel,
+.panel,
+.metric-card,
+.state-panel,
+.table-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  background:
+    linear-gradient(180deg, rgba(223, 229, 213, 0.03), rgba(223, 229, 213, 0.01)),
+    var(--stone);
+  box-shadow: var(--shadow);
+}
+
+.hero-panel::before,
+.panel::before,
+.metric-card::before,
+.state-panel::before,
+.table-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 32%);
+  pointer-events: none;
+}
+
+.hero-panel,
+.page-header,
+.state-panel {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px;
+}
+
+.page-header {
+  align-items: end;
+}
+
+.hero-meta {
+  min-width: 220px;
+  padding: 16px;
+  border: 1px solid var(--border-soft);
+  background: rgba(18, 21, 19, 0.32);
+}
+
+.metric-grid,
+.feature-grid,
+.detail-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.feature-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metric-card {
+  padding: 20px;
+}
+
+.metric-value {
+  margin: 10px 0 6px;
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  font-family: "Chakra Petch", sans-serif;
+  color: var(--fog);
+}
+
+.panel {
+  padding: 18px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.leaderboard-list,
+.breakdown-list,
+.recent-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.leaderboard-item,
+.breakdown-item,
+.recent-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.leaderboard-item:first-child,
+.breakdown-item:first-child,
+.recent-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.leaderboard-name,
+.table-link {
+  color: var(--fog);
+  font-weight: 600;
+}
+
+.leaderboard-metric {
+  color: var(--lantern);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.recent-panel {
+  max-width: 720px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.control {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  background: var(--slate);
+  color: var(--fog);
+  font: inherit;
+}
+
+.table-wrap {
+  padding: 8px;
+}
+
+.players-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.players-table th,
+.players-table td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.players-table th {
+  font-family: "Chakra Petch", sans-serif;
+  color: rgba(223, 229, 213, 0.74);
+}
+
+.advancement-strip {
+  display: grid;
+  gap: 10px;
+}
+
+.progress-track {
+  height: 14px;
+  background: rgba(18, 21, 19, 0.5);
+  border: 1px solid var(--border-soft);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--moss), var(--lantern));
+}
+
+.player-badge-stack {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.player-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border-soft);
+  font-family: "Chakra Petch", sans-serif;
+}
+
+.player-chip.is-on {
+  color: var(--lantern);
+  border-color: rgba(229, 199, 116, 0.24);
+  background: rgba(229, 199, 116, 0.08);
+}
+
+.player-chip.is-off {
+  color: var(--ember);
+  border-color: rgba(217, 122, 82, 0.22);
+  background: rgba(217, 122, 82, 0.08);
+}
+
+.player-chip.neutral {
+  background: rgba(18, 21, 19, 0.3);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.stats-grid dt {
+  margin-bottom: 6px;
+  color: rgba(223, 229, 213, 0.64);
+}
+
+.stats-grid dd {
+  margin: 0;
+  font-family: "Chakra Petch", sans-serif;
+  font-size: 1.2rem;
+}
+
+@media (max-width: 1080px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .side-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feature-grid,
+  .detail-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .main-pane,
+  .side-rail {
+    padding: 16px;
+  }
+
+  .hero-panel,
+  .page-header,
+  .state-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .players-table {
+    min-width: 720px;
+  }
+}
+
