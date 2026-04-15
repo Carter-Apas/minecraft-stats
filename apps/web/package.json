@@ -1,7 +1,7 @@
 {
   "name": "@minecraft-stats/web",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Frontend dashboard for Minecraft Survival server stats.",
   "type": "module",
   "scripts": {
