@@ -18,7 +18,8 @@ export function PlayersTable({ players }: PlayersTableProps) {
             <th>Deaths</th>
             <th>Kills</th>
             <th>Distance</th>
-            <th>Advancements</th>
+            <th>Gameplay Adv.</th>
+            <th>Recipes</th>
             <th>Whitelist</th>
           </tr>
         </thead>
@@ -35,6 +36,7 @@ export function PlayersTable({ players }: PlayersTableProps) {
               <td>{formatNumber(player.mobKills + player.playerKills)}</td>
               <td>{formatDistance(player.totalDistanceTravelledKm)}</td>
               <td>{formatNumber(player.advancementCount)}</td>
+              <td>{formatNumber(player.recipeCount)}</td>
               <td>{player.isWhitelisted ? "Yes" : "No"}</td>
             </tr>
           ))}
@@ -43,4 +45,3 @@ export function PlayersTable({ players }: PlayersTableProps) {
     </div>
   );
 }
-

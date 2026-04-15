@@ -30,14 +30,22 @@ export function OverviewPage() {
       <section className="metric-grid">
         <MetricCard label="Tracked players" value={formatNumber(data.playerCount)} />
         <MetricCard label="Total playtime" value={formatDuration(data.totalPlaytimeHours)} />
+        <MetricCard label="Total distance travelled" value={formatDistance(data.totalDistanceTravelledKm)} />
+        <MetricCard label="Total blocks mined" value={formatNumber(data.totalBlocksMined)} />
+        <MetricCard label="Total blocks placed" value={formatNumber(data.totalBlocksPlaced)} />
+        <MetricCard label="Total mobs killed" value={formatNumber(data.totalMobKills)} />
         <MetricCard label="Total deaths" value={formatNumber(data.totalDeaths)} />
-        <MetricCard label="Distance travelled" value={formatDistance(data.totalDistanceTravelledKm)} />
       </section>
 
       <section className="feature-grid">
         <LeaderboardList title="Top 5 by playtime" players={data.topPlayers} metric="playtime" />
-        <LeaderboardList title="Top 5 by kills" players={data.topKillers} metric="kills" />
-        <LeaderboardList title="Top 5 by distance" players={data.topTravellers} metric="distance" />
+        <LeaderboardList title="Top 5 by gameplay advancements" players={data.topAdvancementPlayers} metric="advancements" />
+        <LeaderboardList title="Top 5 by recipe unlocks" players={data.topRecipePlayers} metric="recipes" />
+        <LeaderboardList title="Top 5 by distance travelled" players={data.topTravellers} metric="distance" />
+        <LeaderboardList title="Top 5 by blocks mined" players={data.topBlockMiners} metric="blocksMined" />
+        <LeaderboardList title="Top 5 by blocks placed" players={data.topBlockPlacers} metric="blocksPlaced" />
+        <LeaderboardList title="Top 5 by mobs killed" players={data.topMobKillers} metric="mobKills" />
+        <LeaderboardList title="Top 5 by items crafted" players={data.topCrafters} metric="itemsCrafted" />
       </section>
 
       <section className="panel recent-panel">

@@ -9,7 +9,8 @@ const SORT_OPTIONS: Array<{ label: string; field: keyof PlayerSummary }> = [
   { label: "Most playtime", field: "playtimeHours" },
   { label: "Most deaths", field: "deaths" },
   { label: "Most kills", field: "mobKills" },
-  { label: "Most advancements", field: "advancementCount" },
+  { label: "Most gameplay advancements", field: "advancementCount" },
+  { label: "Most recipe unlocks", field: "recipeCount" },
 ];
 
 export function PlayersPage() {
@@ -93,4 +94,3 @@ export function PlayersPage() {
     </div>
   );
 }
-

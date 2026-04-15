@@ -12,6 +12,7 @@ const ALLOWED_SORT_FIELDS = new Set([
   "playerKills",
   "mobKills",
   "advancementCount",
+  "recipeCount",
   "totalDistanceTravelledKm",
   "lastUpdated",
   "isWhitelisted",
@@ -67,6 +68,9 @@ export function createApp(config: ApiConfig) {
         itemsCrafted: player.itemsCrafted,
         itemsUsed: player.itemsUsed,
         advancementCount: player.advancementCount,
+        recipeCount: player.recipeCount,
+        availableAdvancementCount: player.availableAdvancementCount,
+        availableRecipeCount: player.availableRecipeCount,
         lastUpdated: player.lastUpdated,
       }))
       .filter((player) => !search || player.name.toLowerCase().includes(search) || player.uuid.includes(search));
@@ -101,10 +105,12 @@ export function createApp(config: ApiConfig) {
       uuid: player.uuid,
       name: player.name,
       advancementCount: player.advancementCount,
+      recipeCount: player.recipeCount,
+      availableAdvancementCount: player.availableAdvancementCount,
+      availableRecipeCount: player.availableRecipeCount,
       advancements: player.advancements,
     });
   });
 
   return app;
 }
-

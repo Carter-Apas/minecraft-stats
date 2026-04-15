@@ -49,10 +49,6 @@ async function seedWorld(rootPath: string) {
           "minecraft:stone": 42,
           "minecraft:diamond_ore": 3,
         },
-        "minecraft:placed_block": {
-          "minecraft:torch": 18,
-          "minecraft:cobblestone": 25,
-        },
         "minecraft:crafted": {
           "minecraft:crafting_table": 1,
           "minecraft:bread": 5,
@@ -60,6 +56,8 @@ async function seedWorld(rootPath: string) {
         "minecraft:used": {
           "minecraft:iron_pickaxe": 40,
           "minecraft:bread": 12,
+          "minecraft:torch": 18,
+          "minecraft:cobblestone": 25,
         },
         "minecraft:killed": {
           "minecraft:zombie": 9,
@@ -115,7 +113,7 @@ describe("loadMinecraftDataset", () => {
     expect(player.blocksMined).toBe(45);
     expect(player.blocksPlaced).toBe(43);
     expect(player.itemsCrafted).toBe(6);
-    expect(player.itemsUsed).toBe(52);
+    expect(player.itemsUsed).toBe(95);
     expect(player.advancementCount).toBe(2);
     expect(player.statBreakdown.mobsKilledByType[0]).toMatchObject({
       key: "minecraft:zombie",

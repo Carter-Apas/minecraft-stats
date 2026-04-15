@@ -17,6 +17,9 @@ export interface PlayerSummary {
   itemsCrafted: number;
   itemsUsed: number;
   advancementCount: number;
+  recipeCount: number;
+  availableAdvancementCount: number;
+  availableRecipeCount: number;
   lastUpdated: string | null;
 }
 
@@ -31,6 +34,7 @@ export interface PlayerDetail extends PlayerSummary {
   advancements: Array<{
     key: string;
     label: string;
+    isRecipe: boolean;
     done: boolean;
     completedAt: string | null;
     criteriaCompleted: number;
@@ -45,10 +49,18 @@ export interface SummaryResponse {
   totalDeaths: number;
   totalMobKills: number;
   totalPlayerKills: number;
+  totalBlocksMined: number;
+  totalBlocksPlaced: number;
   totalDistanceTravelledKm: number;
   topPlayers: PlayerSummary[];
   topKillers: PlayerSummary[];
   topTravellers: PlayerSummary[];
+  topBlockMiners: PlayerSummary[];
+  topBlockPlacers: PlayerSummary[];
+  topCrafters: PlayerSummary[];
+  topMobKillers: PlayerSummary[];
+  topAdvancementPlayers: PlayerSummary[];
+  topRecipePlayers: PlayerSummary[];
   recentlySeenPlayers: PlayerSummary[];
   paths: {
     dataDir: string;
@@ -83,4 +95,3 @@ export interface MinecraftDataset {
   warnings: string[];
   loadedAt: number;
 }
-

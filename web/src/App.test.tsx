@@ -67,6 +67,9 @@ describe("frontend pages", () => {
             itemsCrafted: 5,
             itemsUsed: 9,
             advancementCount: 6,
+            recipeCount: 14,
+            availableAdvancementCount: 20,
+            availableRecipeCount: 30,
             lastUpdated: "2026-04-15T08:00:00.000Z",
           },
         ],
@@ -108,6 +111,9 @@ describe("frontend pages", () => {
         itemsCrafted: 5,
         itemsUsed: 9,
         advancementCount: 1,
+        recipeCount: 3,
+        availableAdvancementCount: 10,
+        availableRecipeCount: 20,
         lastUpdated: "2026-04-15T08:00:00.000Z",
         statBreakdown: {
           mobsKilledByType: [{ key: "minecraft:zombie", label: "Zombie", value: 12 }],
@@ -120,6 +126,7 @@ describe("frontend pages", () => {
           {
             key: "minecraft:story/mine_stone",
             label: "Story Mine Stone",
+            isRecipe: false,
             done: true,
             completedAt: "2026-04-10T08:00:00.000Z",
             criteriaCompleted: 1,
@@ -128,6 +135,7 @@ describe("frontend pages", () => {
           {
             key: "minecraft:adventure/root",
             label: "Adventure Root",
+            isRecipe: false,
             done: false,
             completedAt: null,
             criteriaCompleted: 0,
@@ -148,7 +156,7 @@ describe("frontend pages", () => {
     await waitFor(() => {
       expect(screen.getByText("BuilderBee")).toBeInTheDocument();
     });
-    expect(screen.getByText("Advancement progress")).toBeInTheDocument();
+    expect(screen.getByText("Gameplay advancement progress")).toBeInTheDocument();
     expect(screen.getByText("Mobs killed")).toBeInTheDocument();
   });
 });

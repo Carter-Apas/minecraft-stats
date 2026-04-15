@@ -217,6 +217,10 @@ code {
   margin-bottom: 18px;
 }
 
+.secondary-progress {
+  margin-top: 10px;
+}
+
 .leaderboard-list,
 .breakdown-list,
 .recent-list {
@@ -307,6 +311,14 @@ code {
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--moss), var(--lantern));
+}
+
+.recipe-track {
+  margin-top: -2px;
+}
+
+.recipe-fill {
+  background: linear-gradient(90deg, var(--ember), var(--lantern));
 }
 
 .player-badge-stack {
@@ -400,4 +412,3 @@ code {
     min-width: 720px;
   }
 }
-

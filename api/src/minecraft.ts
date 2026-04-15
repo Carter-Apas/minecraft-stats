@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { inflateRawSync } from "node:zlib";
 
 import type { MinecraftDataset, PlayerDetail, PlayerSummary, SummaryResponse } from "./types.js";
 
@@ -32,13 +33,14 @@ interface RawWhitelistEntry {
   name?: string;
 }
 
+interface CanonicalAdvancementTotals {
+  availableAdvancementCount: number;
+  availableRecipeCount: number;
+}
+
 const IGNORE_ADVANCEMENT_KEYS = new Set([
   "minecraft:recipes/root",
 ]);
-
-const BLOCK_PLACEMENT_PREFIXES = [
-  "minecraft:placed_block",
-];
 
 const DISTANCE_KEYS = {
   walked: [
@@ -92,6 +94,130 @@ async function listJsonFiles(directoryPath: string | null, warnings: string[]): 
   }
 }
 
+async function findServerJarPath(dataDir: string): Promise<string | null> {
+  try {
+    const entries = await fs.readdir(dataDir, { withFileTypes: true });
+    const serverJar = entries.find((entry) => entry.isFile() && /^minecraft_server\..+\.jar$/.test(entry.name));
+    return serverJar ? path.join(dataDir, serverJar.name) : null;
+  } catch {
+    return null;
+  }
+}
+
+function findZipEndOfCentralDirectory(buffer: Buffer): number {
+  for (let offset = buffer.length - 22; offset >= Math.max(0, buffer.length - 65_557); offset -= 1) {
+    if (buffer.readUInt32LE(offset) === 0x06054b50) {
+      return offset;
+    }
+  }
+
+  return -1;
+}
+
+function listZipEntries(buffer: Buffer) {
+  const eocdOffset = findZipEndOfCentralDirectory(buffer);
+  if (eocdOffset === -1) {
+    throw new Error("ZIP end of central directory not found");
+  }
+
+  const centralDirectorySize = buffer.readUInt32LE(eocdOffset + 12);
+  const centralDirectoryOffset = buffer.readUInt32LE(eocdOffset + 16);
+  const entries: Array<{
+    fileName: string;
+    compressionMethod: number;
+    compressedSize: number;
+    uncompressedSize: number;
+    localHeaderOffset: number;
+  }> = [];
+
+  let offset = centralDirectoryOffset;
+  const endOffset = centralDirectoryOffset + centralDirectorySize;
+
+  while (offset < endOffset) {
+    if (buffer.readUInt32LE(offset) !== 0x02014b50) {
+      throw new Error("Invalid ZIP central directory entry");
+    }
+
+    const compressionMethod = buffer.readUInt16LE(offset + 10);
+    const compressedSize = buffer.readUInt32LE(offset + 20);
+    const uncompressedSize = buffer.readUInt32LE(offset + 24);
+    const fileNameLength = buffer.readUInt16LE(offset + 28);
+    const extraFieldLength = buffer.readUInt16LE(offset + 30);
+    const fileCommentLength = buffer.readUInt16LE(offset + 32);
+    const localHeaderOffset = buffer.readUInt32LE(offset + 42);
+    const fileName = buffer.toString("utf8", offset + 46, offset + 46 + fileNameLength);
+
+    entries.push({
+      fileName,
+      compressionMethod,
+      compressedSize,
+      uncompressedSize,
+      localHeaderOffset,
+    });
+
+    offset += 46 + fileNameLength + extraFieldLength + fileCommentLength;
+  }
+
+  return entries;
+}
+
+function extractZipEntry(buffer: Buffer, fileName: string): Buffer | null {
+  const entry = listZipEntries(buffer).find((item) => item.fileName === fileName);
+  if (!entry) {
+    return null;
+  }
+
+  const localHeaderOffset = entry.localHeaderOffset;
+  if (buffer.readUInt32LE(localHeaderOffset) !== 0x04034b50) {
+    throw new Error(`Invalid ZIP local header for ${fileName}`);
+  }
+
+  const fileNameLength = buffer.readUInt16LE(localHeaderOffset + 26);
+  const extraFieldLength = buffer.readUInt16LE(localHeaderOffset + 28);
+  const dataOffset = localHeaderOffset + 30 + fileNameLength + extraFieldLength;
+  const fileBuffer = buffer.subarray(dataOffset, dataOffset + entry.compressedSize);
+
+  if (entry.compressionMethod === 0) {
+    return Buffer.from(fileBuffer);
+  }
+
+  if (entry.compressionMethod === 8) {
+    return inflateRawSync(fileBuffer);
+  }
+
+  throw new Error(`Unsupported ZIP compression method ${entry.compressionMethod} for ${fileName}`);
+}
+
+async function loadCanonicalAdvancementTotals(dataDir: string, warnings: string[]): Promise<CanonicalAdvancementTotals | null> {
+  const serverJarPath = await findServerJarPath(dataDir);
+  if (!serverJarPath) {
+    return null;
+  }
+
+  try {
+    const outerJar = await fs.readFile(serverJarPath);
+    const outerEntryNames = listZipEntries(outerJar).map((entry) => entry.fileName);
+    const embeddedServerJar = outerEntryNames.find((entryName) => /^META-INF\/versions\/[^/]+\/server-[^/]+\.jar$/.test(entryName));
+    const innerJar = embeddedServerJar ? (extractZipEntry(outerJar, embeddedServerJar) ?? outerJar) : outerJar;
+    const entryNames = listZipEntries(innerJar).map((entry) => entry.fileName);
+
+    const availableRecipeCount = entryNames.filter((entryName) => /^data\/minecraft\/advancement\/recipes\/.+\.json$/.test(entryName)).length;
+    const availableAdvancementCount = entryNames.filter((entryName) => /^data\/minecraft\/advancement\/(story|nether|end|adventure|husbandry)\/.+\.json$/.test(entryName)).length;
+
+    if (availableRecipeCount === 0 && availableAdvancementCount === 0) {
+      return null;
+    }
+
+    return {
+      availableAdvancementCount,
+      availableRecipeCount,
+    };
+  } catch (error) {
+    warnings.push(`Failed to inspect server jar for advancement totals: ${error instanceof Error ? error.message : "unknown error"}`);
+    return null;
+  }
+}
+
 function extractUuidFromFilename(filePath: string): string {
   return path.basename(filePath, ".json");
 }
@@ -141,6 +267,132 @@ function topEntries(stats: Record<string, number>, limit = 8) {
     }));
 }
 
+const PLACEABLE_KEYWORDS = [
+  "block",
+  "stone",
+  "dirt",
+  "grass",
+  "sand",
+  "gravel",
+  "clay",
+  "ore",
+  "deepslate",
+  "netherrack",
+  "obsidian",
+  "glass",
+  "pane",
+  "wool",
+  "terracotta",
+  "concrete",
+  "powder",
+  "planks",
+  "log",
+  "wood",
+  "stem",
+  "hyphae",
+  "leaves",
+  "sapling",
+  "slab",
+  "stairs",
+  "wall",
+  "fence",
+  "fence_gate",
+  "door",
+  "trapdoor",
+  "button",
+  "pressure_plate",
+  "torch",
+  "lantern",
+  "scaffolding",
+  "ladder",
+  "rail",
+  "sign",
+  "banner",
+  "carpet",
+  "bed",
+  "chest",
+  "barrel",
+  "shelf",
+  "bookshelf",
+  "crafting_table",
+  "furnace",
+  "anvil",
+  "beacon",
+  "campfire",
+  "cauldron",
+  "hopper",
+  "dispenser",
+  "dropper",
+  "comparator",
+  "repeater",
+  "lever",
+  "lectern",
+  "item_frame",
+  "painting",
+  "flower",
+  "bush",
+  "mushroom",
+  "cactus",
+  "vine",
+];
+
+const NON_BLOCK_EXACT_KEYS = new Set([
+  "minecraft:bone_meal",
+  "minecraft:book",
+  "minecraft:bow",
+  "minecraft:bucket",
+  "minecraft:carrot",
+  "minecraft:cod_bucket",
+  "minecraft:egg",
+  "minecraft:firework_rocket",
+  "minecraft:flint_and_steel",
+  "minecraft:glass_bottle",
+  "minecraft:iron_pickaxe",
+  "minecraft:lava_bucket",
+  "minecraft:milk_bucket",
+  "minecraft:netherite_axe",
+  "minecraft:netherite_pickaxe",
+  "minecraft:shears",
+  "minecraft:snowball",
+  "minecraft:stone_axe",
+  "minecraft:water_bucket",
+  "minecraft:wheat_seeds",
+]);
+
+const NON_BLOCK_SUFFIXES = [
+  "_axe",
+  "_pickaxe",
+  "_shovel",
+  "_hoe",
+  "_sword",
+  "_helmet",
+  "_chestplate",
+  "_leggings",
+  "_boots",
+  "_bucket",
+];
+
+function isLikelyPlaceableBlock(itemKey: string): boolean {
+  if (NON_BLOCK_EXACT_KEYS.has(itemKey)) {
+    return false;
+  }
+
+  const raw = itemKey.replace(/^minecraft:/, "");
+
+  if (NON_BLOCK_SUFFIXES.some((suffix) => raw.endsWith(suffix))) {
+    return false;
+  }
+
+  return PLACEABLE_KEYWORDS.some((keyword) => raw.includes(keyword));
+}
+
+function getPlacedBlockEntries(stats: RawStatsFile["stats"]) {
+  const used = getCategory(stats, "minecraft:used");
+  return Object.entries(used)
+    .filter(([key, value]) => value > 0 && isLikelyPlaceableBlock(key))
+    .sort((a, b) => b[1] - a[1]);
+}
+
 function buildAdvancements(raw: Record<string, RawAdvancementFile> | null) {
   return Object.entries(raw ?? {})
     .filter(([key]) => !IGNORE_ADVANCEMENT_KEYS.has(key))
@@ -153,6 +405,7 @@ function buildAdvancements(raw: Record<string, RawAdvancementFile> | null) {
       return {
         key,
         label: formatMinecraftKey(key),
+        isRecipe: key.startsWith("minecraft:recipes/"),
         done: Boolean(value.done),
         completedAt,
         criteriaCompleted: completedCriteria.length,
@@ -302,6 +555,9 @@ function toSummary(player: PlayerDetail): PlayerSummary {
     itemsCrafted: player.itemsCrafted,
     itemsUsed: player.itemsUsed,
     advancementCount: player.advancementCount,
+    recipeCount: player.recipeCount,
+    availableAdvancementCount: player.availableAdvancementCount,
+    availableRecipeCount: player.availableRecipeCount,
     lastUpdated: player.lastUpdated,
   };
 }
@@ -309,6 +565,7 @@ function toSummary(player: PlayerDetail): PlayerSummary {
 export async function loadMinecraftDataset(dataDir: string): Promise<MinecraftDataset> {
   const warnings: string[] = [];
   const paths = await discoverWorldPaths(dataDir);
+  const canonicalTotals = await loadCanonicalAdvancementTotals(dataDir, warnings);
   const [nameMap, whitelist] = await Promise.all([
     loadNameMap(paths, warnings),
     loadWhitelist(paths, warnings),
@@ -335,11 +592,15 @@ export async function loadMinecraftDataset(dataDir: string): Promise<MinecraftDa
 
       const stats = statsJson?.stats;
       const advancements = buildAdvancements(advancementJson);
-      const blocksPlacedByType = BLOCK_PLACEMENT_PREFIXES.flatMap((category) => topEntries(getCategory(stats, category), 12));
-      const blocksPlaced = BLOCK_PLACEMENT_PREFIXES.reduce(
-        (total, category) => total + sumValues(getCategory(stats, category)),
-        0,
-      );
+      const placedBlockEntries = getPlacedBlockEntries(stats);
+      const blocksPlacedByType = placedBlockEntries.slice(0, 12).map(([key, value]) => ({
+        key,
+        label: formatMinecraftKey(key),
+        value,
+      }));
+      const blocksPlaced = placedBlockEntries.reduce((total, [, value]) => total + value, 0);
+      const completedGameplayAdvancements = advancements.filter((advancement) => advancement.done && !advancement.isRecipe);
+      const completedRecipeUnlocks = advancements.filter((advancement) => advancement.done && advancement.isRecipe);
 
       const player: PlayerDetail = {
         uuid,
@@ -366,7 +627,10 @@ export async function loadMinecraftDataset(dataDir: string): Promise<MinecraftDa
         blocksPlaced,
         itemsCrafted: sumValues(getCategory(stats, "minecraft:crafted")),
         itemsUsed: sumValues(getCategory(stats, "minecraft:used")),
-        advancementCount: advancements.filter((advancement) => advancement.done).length,
+        advancementCount: completedGameplayAdvancements.length,
+        recipeCount: completedRecipeUnlocks.length,
+        availableAdvancementCount: canonicalTotals?.availableAdvancementCount ?? 0,
+        availableRecipeCount: canonicalTotals?.availableRecipeCount ?? 0,
         lastUpdated,
         statBreakdown: {
           mobsKilledByType: topEntries(getCategory(stats, "minecraft:killed")),
@@ -383,6 +647,23 @@ export async function loadMinecraftDataset(dataDir: string): Promise<MinecraftDa
   );
 
   const normalizedPlayers = players.filter((player): player is PlayerDetail => player !== null);
+  const fallbackAdvancementTotal = normalizedPlayers.reduce(
+    (max, player) => Math.max(max, player.advancements.filter((advancement) => !advancement.isRecipe).length),
+    0,
+  );
+  const fallbackRecipeTotal = normalizedPlayers.reduce(
+    (max, player) => Math.max(max, player.advancements.filter((advancement) => advancement.isRecipe).length),
+    0,
+  );
+
+  for (const player of normalizedPlayers) {
+    if (player.availableAdvancementCount === 0) {
+      player.availableAdvancementCount = fallbackAdvancementTotal;
+    }
+    if (player.availableRecipeCount === 0) {
+      player.availableRecipeCount = fallbackRecipeTotal;
+    }
+  }
 
   normalizedPlayers.sort((left, right) => right.playtimeHours - left.playtimeHours || left.name.localeCompare(right.name));
 
@@ -393,10 +674,18 @@ export async function loadMinecraftDataset(dataDir: string): Promise<MinecraftDa
     totalDeaths: normalizedPlayers.reduce((total, player) => total + player.deaths, 0),
     totalMobKills: normalizedPlayers.reduce((total, player) => total + player.mobKills, 0),
     totalPlayerKills: normalizedPlayers.reduce((total, player) => total + player.playerKills, 0),
+    totalBlocksMined: normalizedPlayers.reduce((total, player) => total + player.blocksMined, 0),
+    totalBlocksPlaced: normalizedPlayers.reduce((total, player) => total + player.blocksPlaced, 0),
     totalDistanceTravelledKm: Number(normalizedPlayers.reduce((total, player) => total + player.totalDistanceTravelledKm, 0).toFixed(2)),
     topPlayers: normalizedPlayers.slice(0, 5).map(toSummary),
     topKillers: [...normalizedPlayers].sort((left, right) => right.mobKills - left.mobKills || right.playerKills - left.playerKills).slice(0, 5).map(toSummary),
     topTravellers: [...normalizedPlayers].sort((left, right) => right.totalDistanceTravelledKm - left.totalDistanceTravelledKm).slice(0, 5).map(toSummary),
+    topBlockMiners: [...normalizedPlayers].sort((left, right) => right.blocksMined - left.blocksMined).slice(0, 5).map(toSummary),
+    topBlockPlacers: [...normalizedPlayers].sort((left, right) => right.blocksPlaced - left.blocksPlaced).slice(0, 5).map(toSummary),
+    topCrafters: [...normalizedPlayers].sort((left, right) => right.itemsCrafted - left.itemsCrafted).slice(0, 5).map(toSummary),
+    topMobKillers: [...normalizedPlayers].sort((left, right) => right.mobKills - left.mobKills).slice(0, 5).map(toSummary),
+    topAdvancementPlayers: [...normalizedPlayers].sort((left, right) => right.advancementCount - left.advancementCount).slice(0, 5).map(toSummary),
+    topRecipePlayers: [...normalizedPlayers].sort((left, right) => right.recipeCount - left.recipeCount).slice(0, 5).map(toSummary),
     recentlySeenPlayers: [...normalizedPlayers]
       .filter((player) => player.lastUpdated)
       .sort((left, right) => new Date(right.lastUpdated ?? 0).getTime() - new Date(left.lastUpdated ?? 0).getTime())

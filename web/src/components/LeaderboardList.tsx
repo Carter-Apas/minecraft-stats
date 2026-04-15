@@ -6,7 +6,7 @@ import type { PlayerSummary } from "../lib/types";
 interface LeaderboardListProps {
   title: string;
   players: PlayerSummary[];
-  metric: "playtime" | "kills" | "distance";
+  metric: "playtime" | "kills" | "distance" | "advancements" | "recipes" | "blocksMined" | "blocksPlaced" | "itemsCrafted" | "mobKills";
 }
 
 export function LeaderboardList({ title, players, metric }: LeaderboardListProps) {
@@ -16,6 +16,24 @@ export function LeaderboardList({ title, players, metric }: LeaderboardListProps
     }
     if (metric === "distance") {
       return formatDistance(player.totalDistanceTravelledKm);
+    }
+    if (metric === "blocksMined") {
+      return `${formatNumber(player.blocksMined)} mined`;
+    }
+    if (metric === "blocksPlaced") {
+      return `${formatNumber(player.blocksPlaced)} placed`;
+    }
+    if (metric === "itemsCrafted") {
+      return `${formatNumber(player.itemsCrafted)} crafted`;
+    }
+    if (metric === "mobKills") {
+      return `${formatNumber(player.mobKills)} killed`;
+    }
+    if (metric === "advancements") {
+      return `${formatNumber(player.advancementCount)} complete`;
+    }
+    if (metric === "recipes") {
+      return `${formatNumber(player.recipeCount)} unlocked`;
     }
     return `${formatCompactNumber(player.mobKills + player.playerKills)} total`;
   }
@@ -46,4 +64,3 @@ export function LeaderboardList({ title, players, metric }: LeaderboardListProps
     </section>
   );
 }
-
