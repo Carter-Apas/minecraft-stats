@@ -7,7 +7,7 @@ Standalone read-only dashboard for `minecraft-survival.coder.kiwi`.
 - A file-backed API in [apps/api](/home/carter/Projects/personal/minecraft-stats/apps/api) that discovers the mounted Minecraft world, reads `stats`, `advancements`, `usercache.json`, and `whitelist.json`, normalizes the data, and serves JSON endpoints.
 - A frontend in [apps/web](/home/carter/Projects/personal/minecraft-stats/apps/web) that renders an overview dashboard, player leaderboard, and per-player detail pages.
 - Tests for API parsing and frontend loading/empty/detail rendering.
-- Container and Kubernetes examples for running the API with a read-only world mount and exposing both apps on `minecraft-survival.coder.kiwi`.
+- Dockerfiles for the API and frontend images.
 
 ## Expected data layout
 
@@ -48,22 +48,32 @@ Raw Minecraft stat keys do not leak into the frontend contract.
 
 ## Local development
 
-Install dependencies:
+Install API dependencies:
 
 ```bash
-pnpm install
+cd apps/api
+npm install
 ```
 
 Run the API:
 
 ```bash
-pnpm --filter @minecraft-stats/api dev
+cd apps/api
+npm run dev
+```
+
+Install frontend dependencies:
+
+```bash
+cd apps/web
+npm install
 ```
 
 Run the frontend:
 
 ```bash
-pnpm --filter @minecraft-stats/web dev
+cd apps/web
+npm run dev
 ```
 
 Set `VITE_API_BASE_URL` in [apps/web/.env.example](/home/carter/Projects/personal/minecraft-stats/apps/web/.env.example) if the frontend is not reverse-proxied to `/api`.
@@ -71,18 +81,35 @@ Set `VITE_API_BASE_URL` in [apps/web/.env.example](/home/carter/Projects/persona
 ## Verification
 
 ```bash
-pnpm test
-pnpm build
+cd apps/api && npm test && npm run build
+cd apps/web && npm test && npm run build
 ```
 
-## Deployment requirements
+## Deployment
+
+The app has no database and is intended to stay read-only against the Minecraft data directory.
+
+The API container or process must be able to read a directory containing:
+
+- `world/stats/*.json`
+- `world/advancements/*.json`
+- `usercache.json`
+- `whitelist.json`
+- optional `logs/latest.log`
+
+Set `DATA_DIR` to that directory. In production, mount it read-only.
+
+### If you deploy with containers
 
 - Mount the Minecraft survival data into the API container as read-only at `/data`.
 - Keep the API scheduled on the same node as the Minecraft server if the source data is still exposed through `hostPath`.
-- The example manifest in [deploy/k8s/minecraft-survival-dashboard.yaml](/home/carter/Projects/personal/minecraft-stats/deploy/k8s/minecraft-survival-dashboard.yaml) assumes:
-  - node label `minecraft-data=survival`
-  - host path `/srv/minecraft/survival`
-  - ingress host `minecraft-survival.coder.kiwi`
+- Publish the API image from [Dockerfile.api](/home/carter/Projects/personal/minecraft-stats/Dockerfile.api).
+- Publish the frontend image from [Dockerfile.web](/home/carter/Projects/personal/minecraft-stats/Dockerfile.web).
+- If you are using Kubernetes with `hostPath`, the API pod needs node affinity or some equivalent scheduling rule so it lands on the same node that has the Minecraft files.
+- If you expose the app on `minecraft-survival.coder.kiwi`, route `/api` to the API service and `/` to the frontend service.
 
-Adjust those values to match the actual cluster and host filesystem.
-# minecraft-stats
+### If you deploy without containers
+
+- Run the API with `node apps/api/dist/index.js`.
+- Serve `apps/web/dist` from nginx or Caddy.
+- Reverse-proxy `/api` to the API process.

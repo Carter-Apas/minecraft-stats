@@ -28,25 +28,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.20.0
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          cache: npm
+          cache-dependency-path: |
+            apps/api/package-lock.json
+            apps/web/package-lock.json
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install API dependencies
+        working-directory: apps/api
+        run: npm ci
 
       - name: Build API
-        run: pnpm --filter @minecraft-stats/api build
+        working-directory: apps/api
+        run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
 
       - name: Build frontend
-        run: pnpm --filter @minecraft-stats/web build
+        working-directory: apps/web
+        run: npm run build
 
   release-please:
     if: github.event_name != 'release'
@@ -76,17 +81,15 @@ jobs:
         run: |
           case "$TAG_NAME" in
             api-v*)
-              echo "component=api" >> "$GITHUB_OUTPUT"
+              echo "app_dir=apps/api" >> "$GITHUB_OUTPUT"
               echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/minecraft-stats-api" >> "$GITHUB_OUTPUT"
               echo "dockerfile=./Dockerfile.api" >> "$GITHUB_OUTPUT"
-              echo "package_filter=@minecraft-stats/api" >> "$GITHUB_OUTPUT"
               echo "version=${TAG_NAME#api-}" >> "$GITHUB_OUTPUT"
               ;;
             web-v*)
-              echo "component=web" >> "$GITHUB_OUTPUT"
+              echo "app_dir=apps/web" >> "$GITHUB_OUTPUT"
               echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/minecraft-stats-web" >> "$GITHUB_OUTPUT"
               echo "dockerfile=./Dockerfile.web" >> "$GITHUB_OUTPUT"
-              echo "package_filter=@minecraft-stats/web" >> "$GITHUB_OUTPUT"
               echo "version=${TAG_NAME#web-}" >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -95,22 +98,20 @@ jobs:
               ;;
           esac
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.20.0
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          cache: npm
+          cache-dependency-path: ${{ steps.release-target.outputs.app_dir }}/package-lock.json
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install released package dependencies
+        working-directory: ${{ steps.release-target.outputs.app_dir }}
+        run: npm ci
 
       - name: Build released package
-        run: pnpm --filter "${{ steps.release-target.outputs.package_filter }}" build
+        working-directory: ${{ steps.release-target.outputs.app_dir }}
+        run: npm run build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
