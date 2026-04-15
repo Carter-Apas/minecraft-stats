@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/Carter-Apas/minecraft-stats/compare/api-v0.2.1...api-v0.2.2) (2026-04-15)
+
+
+### Bug Fixes
+
+* add package keywords ([6c940a0](https://github.com/Carter-Apas/minecraft-stats/commit/6c940a04b15c02c93a4c53d19ef3e46f88cf6f28))
+
 ## [0.2.1](https://github.com/Carter-Apas/minecraft-stats/compare/api-v0.2.0...api-v0.2.1) (2026-04-15)
 
 
