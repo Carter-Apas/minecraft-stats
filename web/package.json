@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.2.1",
   "description": "Frontend dashboard for Minecraft Survival server stats.",
+  "keywords": [
+    "minecraft",
+    "dashboard",
+    "frontend"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

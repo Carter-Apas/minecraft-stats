@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.2.1",
   "description": "File-backed API for Minecraft Survival dashboard data.",
+  "keywords": [
+    "minecraft",
+    "dashboard",
+    "api"
+  ],
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
