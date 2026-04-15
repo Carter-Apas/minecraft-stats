@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Carter-Apas/minecraft-stats/compare/web-v0.2.2...web-v0.3.0) (2026-04-15)
+
+
+### Features
+
+* refine dashboard progression and leaderboards ([abbd47f](https://github.com/Carter-Apas/minecraft-stats/commit/abbd47f68d660713faa1e3757afd994c1dbbf0c3))
+
 ## [0.2.2](https://github.com/Carter-Apas/minecraft-stats/compare/web-v0.2.1...web-v0.2.2) (2026-04-15)
 
 
