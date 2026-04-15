@@ -1,0 +1,8 @@
+# Changelog
+
+## [0.2.0](https://github.com/Carter-Apas/minecraft-stats/compare/web-v0.1.0...web-v0.2.0) (2026-04-15)
+
+
+### Features
+
+* Init commit ([4fa5b50](https://github.com/Carter-Apas/minecraft-stats/commit/4fa5b50f22ae9f2c676229b2d1be384632edc207))
