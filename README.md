@@ -4,8 +4,8 @@ Standalone read-only dashboard for `minecraft-survival.coder.kiwi`.
 
 ## What is included
 
-- A file-backed API in [apps/api](/home/carter/Projects/personal/minecraft-stats/apps/api) that discovers the mounted Minecraft world, reads `stats`, `advancements`, `usercache.json`, and `whitelist.json`, normalizes the data, and serves JSON endpoints.
-- A frontend in [apps/web](/home/carter/Projects/personal/minecraft-stats/apps/web) that renders an overview dashboard, player leaderboard, and per-player detail pages.
+- A file-backed API in [api](/home/carter/Projects/personal/minecraft-stats/api) that discovers the mounted Minecraft world, reads `stats`, `advancements`, `usercache.json`, and `whitelist.json`, normalizes the data, and serves JSON endpoints.
+- A frontend in [web](/home/carter/Projects/personal/minecraft-stats/web) that renders an overview dashboard, player leaderboard, and per-player detail pages.
 - Tests for API parsing and frontend loading/empty/detail rendering.
 - Dockerfiles for the API and frontend images.
 
@@ -51,38 +51,38 @@ Raw Minecraft stat keys do not leak into the frontend contract.
 Install API dependencies:
 
 ```bash
-cd apps/api
+cd api
 npm install
 ```
 
 Run the API:
 
 ```bash
-cd apps/api
+cd api
 npm run dev
 ```
 
 Install frontend dependencies:
 
 ```bash
-cd apps/web
+cd web
 npm install
 ```
 
 Run the frontend:
 
 ```bash
-cd apps/web
+cd web
 npm run dev
 ```
 
-Set `VITE_API_BASE_URL` in [apps/web/.env.example](/home/carter/Projects/personal/minecraft-stats/apps/web/.env.example) if the frontend is not reverse-proxied to `/api`.
+Set `VITE_API_BASE_URL` in [web/.env.example](/home/carter/Projects/personal/minecraft-stats/web/.env.example) if the frontend is not reverse-proxied to `/api`.
 
 ## Verification
 
 ```bash
-cd apps/api && npm test && npm run build
-cd apps/web && npm test && npm run build
+cd api && npm test && npm run build
+cd web && npm test && npm run build
 ```
 
 ## Deployment
@@ -110,6 +110,6 @@ Set `DATA_DIR` to that directory. In production, mount it read-only.
 
 ### If you deploy without containers
 
-- Run the API with `node apps/api/dist/index.js`.
-- Serve `apps/web/dist` from nginx or Caddy.
+- Run the API with `node api/dist/index.js`.
+- Serve `web/dist` from nginx or Caddy.
 - Reverse-proxy `/api` to the API process.

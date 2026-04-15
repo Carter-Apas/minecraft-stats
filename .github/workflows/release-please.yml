@@ -33,23 +33,23 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: |
-            apps/api/package-lock.json
-            apps/web/package-lock.json
+            api/package-lock.json
+            web/package-lock.json
 
       - name: Install API dependencies
-        working-directory: apps/api
+        working-directory: api
         run: npm ci
 
       - name: Build API
-        working-directory: apps/api
+        working-directory: api
         run: npm run build
 
       - name: Install frontend dependencies
-        working-directory: apps/web
+        working-directory: web
         run: npm ci
 
       - name: Build frontend
-        working-directory: apps/web
+        working-directory: web
         run: npm run build
 
   release-please:
@@ -81,19 +81,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Lowercase image owner
+        run: echo "IMAGE_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/api/package-lock.json
+          cache-dependency-path: api/package-lock.json
 
       - name: Install API dependencies
-        working-directory: apps/api
+        working-directory: api
         run: npm ci
 
       - name: Build API
-        working-directory: apps/api
+        working-directory: api
         run: npm run build
 
       - name: Extract API version
@@ -142,14 +145,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - name: Install frontend dependencies
-        working-directory: apps/web
+        working-directory: web
         run: npm ci
 
       - name: Build frontend
-        working-directory: apps/web
+        working-directory: web
         run: npm run build
 
       - name: Extract frontend version
