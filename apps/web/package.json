@@ -2,6 +2,7 @@
   "name": "@minecraft-stats/web",
   "private": true,
   "version": "0.2.0",
+  "description": "Frontend dashboard for Minecraft Survival server stats.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -28,4 +29,3 @@
     "vitest": "^3.2.4"
   }
 }
-
